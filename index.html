@@ -606,7 +606,7 @@ body {
 
     <!-- #1 Arc'teryx Mantis 2 -->
     <div class="product-card reveal">
-      <div class="product-visual">
+      <div class="product-visual" data-shopify-product="https://footprintusa.co/products/arcteryx-mantis-2-waist-pack.json">
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -664,7 +664,7 @@ body {
 
     <!-- #2 Patagonia UL Black Hole Mini -->
     <div class="product-card reveal">
-      <div class="product-visual">
+      <div class="product-visual" data-shopify-product="https://shop.sportsbasement.com/products/ul-black-hole-mini-hip-pack29.json">
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -828,7 +828,7 @@ body {
 
     <!-- #5 Porter-Yoshida Tanker Waist -->
     <div class="product-card reveal">
-      <div class="product-visual" data-extra-images='["https://www.yoshidakaban.com/upload/product/104867/l/622-68302-30-02.jpg","https://www.yoshidakaban.com/upload/product/104867/l/622-68302-30-03.jpg"]'>
+      <div class="product-visual" data-shopify-product="https://sonofastag.com/products/porter-yoshida-co-tanker-waist-bag-black.json">
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -989,7 +989,7 @@ body {
 
     <!-- #2 Patagonia Atom Sling 8L -->
     <div class="product-card reveal">
-      <div class="product-visual">
+      <div class="product-visual" data-shopify-product="https://eikenshop.com/products/patagonia-atom-sling-8l.json">
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -1047,7 +1047,7 @@ body {
 
     <!-- #3 Osprey Daylite Sling -->
     <div class="product-card reveal">
-      <div class="product-visual">
+      <div class="product-visual" data-shopify-product="https://highcountryoutfitters.com/products/daylite-sling.json">
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -1164,7 +1164,7 @@ body {
 
     <!-- #5 Porter-Yoshida Tanker Sling -->
     <div class="product-card reveal">
-      <div class="product-visual" data-extra-images='["https://www.yoshidakaban.com/upload/product/105755/l/622-76963-10-02.jpg","https://www.yoshidakaban.com/upload/product/105755/l/622-76963-10-03.jpg"]'>
+      <div class="product-visual" data-shopify-product="https://sonofastag.com/products/porter-yoshida-co-tanker-shoulder-bag-s-black.json">
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -1429,12 +1429,12 @@ window.addEventListener('scroll', () => {
     const track = document.createElement('div');
     track.className = 'carousel-track';
 
-    imageSrcs.forEach(function(src) {
+    imageSrcs.forEach(function(src, idx) {
       const slide = document.createElement('div');
       slide.className = 'carousel-slide';
       const img = document.createElement('img');
       img.src = src;
-      img.loading = 'lazy';
+      if (idx > 0) img.loading = 'lazy';
       img.alt = container.closest('.product-card').querySelector('.product-name').textContent;
       img.onerror = function() {
         slide.remove();
@@ -1476,44 +1476,30 @@ window.addEventListener('scroll', () => {
     updateDots();
   }
 
-  function proxyUrl(raw) {
-    return 'https://wsrv.nl/?url=' + encodeURIComponent(raw) + '&w=800&q=80';
-  }
-
   function initCarousels() {
-    // 1. Products with static extra images (data-extra-images JSON array of raw URLs)
-    document.querySelectorAll('.product-visual[data-extra-images]').forEach(function(el) {
-      try {
-        var rawUrls = JSON.parse(el.getAttribute('data-extra-images'));
-        // Keep existing primary image as first, add extras
-        var existing = el.querySelector('img');
-        var primarySrc = existing ? existing.src : null;
-        var allSrcs = [];
-        if (primarySrc) allSrcs.push(primarySrc);
-        rawUrls.forEach(function(url) {
-          var proxied = proxyUrl(url);
-          if (proxied !== primarySrc) allSrcs.push(proxied);
-        });
-        if (allSrcs.length > 1) buildCarousel(el, allSrcs);
-      } catch(e) {}
-    });
-
-    // 2. Products with Shopify JSON endpoint (runtime image discovery)
+    // Fetch product images from Shopify store JSON endpoints
     document.querySelectorAll('.product-visual[data-shopify-product]').forEach(function(el) {
       var jsonUrl = el.getAttribute('data-shopify-product');
       fetch(jsonUrl)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (!data.product || !data.product.images) return;
-          var images = data.product.images;
-          if (images.length < 2) return;
-          // Use up to 5 images
-          var srcs = images.slice(0, 5).map(function(img) {
-            return proxyUrl(img.src);
-          });
-          buildCarousel(el, srcs);
+        .then(function(r) {
+          if (!r.ok) throw new Error(r.status);
+          return r.json();
         })
-        .catch(function() { /* Keep single image */ });
+        .then(function(data) {
+          if (!data.product || !data.product.images || data.product.images.length === 0) return;
+          var images = data.product.images;
+          // Use up to 5 images for the carousel
+          var srcs = images.slice(0, 5).map(function(img) {
+            // Shopify CDN images can be resized with _800x suffix
+            var src = img.src;
+            if (src && src.indexOf('cdn.shopify.com') !== -1) {
+              src = src.replace(/(\.\w+)(\?.*)?$/, '_800x$1');
+            }
+            return src;
+          });
+          if (srcs.length >= 1) buildCarousel(el, srcs);
+        })
+        .catch(function() { /* Shopify fetch failed — keep existing image or SVG fallback */ });
     });
   }
 
