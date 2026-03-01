@@ -214,7 +214,7 @@ body {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%);
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
 }
 .product-visual .brand-mark {
@@ -226,7 +226,7 @@ body {
   letter-spacing: 2px;
   text-transform: uppercase;
   color: rgba(255,255,255,0.9);
-  z-index: 2;
+  z-index: 3;
   background: rgba(0,0,0,0.4);
   padding: 4px 10px;
   border-radius: 6px;
@@ -246,7 +246,7 @@ body {
   justify-content: center;
   font-weight: 700;
   font-size: 14px;
-  z-index: 2;
+  z-index: 3;
   box-shadow: 0 2px 12px rgba(232,93,58,0.4);
 }
 .product-visual .emoji-fallback {
@@ -457,6 +457,58 @@ body {
   color: var(--text-muted);
 }
 
+/* ─── IMAGE CAROUSEL ─── */
+.carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.carousel-track::-webkit-scrollbar { display: none; }
+.carousel-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  min-width: 100%;
+  height: 100%;
+}
+.carousel-slide img {
+  position: static;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  z-index: auto;
+}
+.carousel-dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 4;
+}
+.carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.carousel-dot.active {
+  background: white;
+  width: 18px;
+  border-radius: 3px;
+}
+
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   .section { padding: 48px 16px; }
@@ -665,7 +717,7 @@ body {
 
     <!-- #3 Bellroy Venture Ready 2.5L -->
     <div class="product-card reveal">
-      <div class="product-visual">
+      <div class="product-visual" data-shopify-product="https://bellroy.com/products/venture-ready-sling.json">
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -721,7 +773,7 @@ body {
 
     <!-- #4 Cotopaxi Allpa X 3L -->
     <div class="product-card reveal">
-      <div class="product-visual">
+      <div class="product-visual" data-shopify-product="https://www.cotopaxi.com/products/allpa-x-3l-hip-pack.json">
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -776,7 +828,7 @@ body {
 
     <!-- #5 Porter-Yoshida Tanker Waist -->
     <div class="product-card reveal">
-      <div class="product-visual">
+      <div class="product-visual" data-extra-images='["https://www.yoshidakaban.com/upload/product/104867/l/622-68302-30-02.jpg","https://www.yoshidakaban.com/upload/product/104867/l/622-68302-30-03.jpg"]'>
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -878,7 +930,7 @@ body {
 
     <!-- #1 Aer Day Sling 3 -->
     <div class="product-card reveal">
-      <div class="product-visual">
+      <div class="product-visual" data-shopify-product="https://aersf.com/products/day-sling-3.json">
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -1053,7 +1105,7 @@ body {
 
     <!-- #4 Bellroy Venture Sling 6L -->
     <div class="product-card reveal">
-      <div class="product-visual">
+      <div class="product-visual" data-shopify-product="https://bellroy.com/products/venture-sling.json">
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -1112,7 +1164,7 @@ body {
 
     <!-- #5 Porter-Yoshida Tanker Sling -->
     <div class="product-card reveal">
-      <div class="product-visual">
+      <div class="product-visual" data-extra-images='["https://www.yoshidakaban.com/upload/product/105755/l/622-76963-10-02.jpg","https://www.yoshidakaban.com/upload/product/105755/l/622-76963-10-03.jpg"]'>
         <div class="img-overlay"></div>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
       <defs>
@@ -1363,6 +1415,115 @@ window.addEventListener('scroll', () => {
     }
   });
 });
+</script>
+
+<script>
+// Image carousel - Instagram-style multi-image viewer
+(function() {
+  function buildCarousel(container, imageSrcs) {
+    // Remove existing single img
+    const existingImg = container.querySelector('img');
+    if (existingImg) existingImg.remove();
+
+    // Create track
+    const track = document.createElement('div');
+    track.className = 'carousel-track';
+
+    imageSrcs.forEach(function(src) {
+      const slide = document.createElement('div');
+      slide.className = 'carousel-slide';
+      const img = document.createElement('img');
+      img.src = src;
+      img.loading = 'lazy';
+      img.alt = container.closest('.product-card').querySelector('.product-name').textContent;
+      img.onerror = function() {
+        slide.remove();
+        updateDots();
+      };
+      slide.appendChild(img);
+      track.appendChild(slide);
+    });
+
+    // Insert track (before overlay so overlay sits on top)
+    const overlay = container.querySelector('.img-overlay');
+    container.insertBefore(track, overlay || container.firstChild);
+
+    // Create dots
+    var dotsEl = document.createElement('div');
+    dotsEl.className = 'carousel-dots';
+    container.appendChild(dotsEl);
+
+    function updateDots() {
+      var slides = track.querySelectorAll('.carousel-slide');
+      dotsEl.innerHTML = '';
+      if (slides.length <= 1) { dotsEl.style.display = 'none'; return; }
+      dotsEl.style.display = 'flex';
+      var scrollLeft = track.scrollLeft;
+      var slideWidth = track.offsetWidth || 1;
+      var activeIdx = Math.round(scrollLeft / slideWidth);
+      slides.forEach(function(_, i) {
+        var dot = document.createElement('button');
+        dot.className = 'carousel-dot' + (i === activeIdx ? ' active' : '');
+        dot.setAttribute('aria-label', 'Image ' + (i + 1));
+        dot.addEventListener('click', function() {
+          slides[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+        });
+        dotsEl.appendChild(dot);
+      });
+    }
+
+    track.addEventListener('scroll', function() { updateDots(); });
+    updateDots();
+  }
+
+  function proxyUrl(raw) {
+    return 'https://wsrv.nl/?url=' + encodeURIComponent(raw) + '&w=800&q=80';
+  }
+
+  function initCarousels() {
+    // 1. Products with static extra images (data-extra-images JSON array of raw URLs)
+    document.querySelectorAll('.product-visual[data-extra-images]').forEach(function(el) {
+      try {
+        var rawUrls = JSON.parse(el.getAttribute('data-extra-images'));
+        // Keep existing primary image as first, add extras
+        var existing = el.querySelector('img');
+        var primarySrc = existing ? existing.src : null;
+        var allSrcs = [];
+        if (primarySrc) allSrcs.push(primarySrc);
+        rawUrls.forEach(function(url) {
+          var proxied = proxyUrl(url);
+          if (proxied !== primarySrc) allSrcs.push(proxied);
+        });
+        if (allSrcs.length > 1) buildCarousel(el, allSrcs);
+      } catch(e) {}
+    });
+
+    // 2. Products with Shopify JSON endpoint (runtime image discovery)
+    document.querySelectorAll('.product-visual[data-shopify-product]').forEach(function(el) {
+      var jsonUrl = el.getAttribute('data-shopify-product');
+      fetch(jsonUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.product || !data.product.images) return;
+          var images = data.product.images;
+          if (images.length < 2) return;
+          // Use up to 5 images
+          var srcs = images.slice(0, 5).map(function(img) {
+            return proxyUrl(img.src);
+          });
+          buildCarousel(el, srcs);
+        })
+        .catch(function() { /* Keep single image */ });
+    });
+  }
+
+  // Run after DOM is ready and images have had a chance to start loading
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(initCarousels, 100); });
+  } else {
+    setTimeout(initCarousels, 100);
+  }
+})();
 </script>
 
 </body>
